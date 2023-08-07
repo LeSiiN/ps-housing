@@ -399,7 +399,8 @@ Framework.ox = {
         return handler
     end,
 
-    AddDoorZoneInside = function (coords, size, heading, leave, checkDoor)
+    AddDoorZoneInside = function (coords, size, heading, propertyId, leave, checkDoor, sellHouse)
+        local property_id = propertyId
         local handler = exports.ox_target:addBoxZone({
             coords = vector3(coords.x, coords.y, coords.z), --z = 3.0
             size = vector3(size.y, size.x, size.z),
@@ -418,6 +419,15 @@ Framework.ox = {
                     onSelect = checkDoor,
                     icon = "fas fa-bell",
                 },
+                {
+                    label = "Sell House",
+                    onSelect = sellHouse,
+                    canInteract = function()
+                        local property = Property.Get(property_id)
+                        return property.owner
+                    end,
+                    icon = "fas fa-dollar-sign",
+                }
             },
         })
 
