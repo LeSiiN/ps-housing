@@ -418,15 +418,6 @@ Framework.ox = {
                     label = "Check Door",
                     onSelect = checkDoor,
                     icon = "fas fa-bell",
-                },
-                {
-                    label = "Sell House",
-                    onSelect = sellHouse,
-                    canInteract = function()
-                        local property = Property.Get(property_id)
-                        return property.owner
-                    end,
-                    icon = "fas fa-dollar-sign",
                 }
             },
         })
