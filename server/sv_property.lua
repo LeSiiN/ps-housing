@@ -508,7 +508,7 @@ RegisterNetEvent("ps-housing:server:showcaseProperty", function(property_id)
     end
 end)
 
-RegisterNetEvent('ps-housing:server:raidProperty', function (property_id)
+RegisterNetEvent('ps-housing:server:raidProperty', function(property_id)
     local src = source
     Debug("Player is trying to raid property", property_id)
 
@@ -519,26 +519,57 @@ RegisterNetEvent('ps-housing:server:raidProperty', function (property_id)
         return 
     end
 
-    local PlayerData = GetPlayerData(src)
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    local PlayerData = Player.PlayerData
     local job = PlayerData.job
     local jobName = job.name
     local gradeAllowed = tonumber(job.grade.level) >= Config.MinGradeToRaid
     local onDuty = job.onduty
+    local raidItem = Config.RaidItem
 
-    if jobName == "police" and onDuty and gradeAllowed then
-        if not property.raiding then
-            local confirmRaid = lib.callback.await('ps-housing:cb:confirmRaid', src, (property.propertyData.street or property.propertyData.apartment) .. " " .. property.property_id, property_id)
-            if confirmRaid == "confirm" then
-                property:StartRaid(src)
+    -- Check if the police officer has the "stormram" item
+    local hasStormRam = (Config.Inventory == "ox" and exports.ox_inventory:Search(src, "count", raidItem) > 0) or Player.Functions.GetItemByName(raidItem)
+
+    local isAllowedToRaid = PoliceJobs[jobName] and onDuty and gradeAllowed
+    if isAllowedToRaid then
+        if hasStormRam then
+            if not property.raiding then
+                local confirmRaid = lib.callback.await('ps-housing:cb:confirmRaid', src, (property.propertyData.street or property.propertyData.apartment) .. " " .. property.property_id, property_id)
+                if confirmRaid == "confirm" then
+                    property:StartRaid(src)
+                    property:PlayerEnter(src)
+                    Framework[Config.Notify].Notify(src, "Raid started", "success")
+
+                    if Config.ConsumeRaidItem then
+                        -- Remove the "stormram" item from the officer's inventory
+                        if Config.Inventory == 'ox' then
+                            exports.ox_inventory:RemoveItem(src, raidItem, 1)
+                        else
+                            Player.Functions.RemoveItem(raidItem, 1)
+                            TriggerClientEvent("inventory:client:ItemBox", src, QBCore.Shared.Items[raidItem], "remove")
+                            TriggerEvent("inventory:server:RemoveItem", src, raidItem, 1)
+                        end
+                    end
+                end
+            else
+                Framework[Config.Notify].Notify(src, "Raid in progress", "success")
                 property:PlayerEnter(src)
-                Framework[Config.Notify].Notify(src, "Raid started", "success")
             end
         else
-            Framework[Config.Notify].Notify(src, "Raid in progress", "success")
-            property:PlayerEnter(src)
+            Framework[Config.Notify].Notify(src, "You need a stormram to perform a raid", "error")
+        end
+    else
+        if not PoliceJobs[jobName] then
+            Framework[Config.Notify].Notify(src, "Only police officers are permitted to perform raids", "error")
+        elseif not onDuty then
+            Framework[Config.Notify].Notify(src, "You must be onduty before performing a raid", "error")
+        elseif not gradeAllowed then
+            Framework[Config.Notify].Notify(src, "You must be a higher rank before performing a raid", "error")
         end
     end
 end)
+
 
 
 lib.callback.register('ps-housing:cb:getFurnitures', function(source, property_id)
@@ -650,7 +681,7 @@ RegisterNetEvent("ps-housing:server:removeFurniture", function(property_id, item
 
     for k, v in pairs(currentFurnitures) do
         if v.id == itemid then
-            currentFurnitures[k] = nil
+            table.remove(currentFurnitures, k)
             break
         end
     end
