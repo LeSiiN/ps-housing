@@ -74,6 +74,8 @@ https://github.com/complexza/ps-housing/assets/74205343/0ff26e7f-1341-45fc-8fc6-
 * This entire README is meant for compatibility with default QBCore scripts. If you have different scripts, you'll need to adjust them for compatibility yourself. Refrain from asking us how to circumvent paid scripts that can't be adjusted for ps-housing support. Instead, request their support for ps-housing - this script is fully open source for that reason. Any inquiries related to this be ignored. 
 
 # Installation
+## Kamaryn has created an amazing setup video located [here.](https://www.youtube.com/watch?v=6YKkl20BevE)
+
 ## PAY ATTENTION TO EACH STEP. DO NOT SKIP ANY. 
 
 1. Find the following events in `qb-multicharacter` and change in server/main.lua event to: 
@@ -318,7 +320,7 @@ This adjustment ensures that `properties.sql` file's character set and collation
 
 # Dependency
 1. [ps-realtor](https://github.com/Project-Sloth/ps-realtor)
-2. [five-freecam](https://github.com/Deltanic/fivem-freecam)
+2. [fivem-freecam](https://github.com/Deltanic/fivem-freecam)
 3. [ox_lib](https://github.com/overextended/ox_lib/releases) - Use the latest release. If you do not use the latest release, MAKE SURE TO BUILD THE UI. Find their docs [here](https://overextended.dev/ox_lib#building-the-ui) on how to build the UI.
 4. [ox_target](https://github.com/overextended/ox_target) or [qb-target](https://github.com/qbcore-framework/qb-target) - Change in [Config](https://github.com/Project-Sloth/ps-housing/blob/3c0f197b6d639f13235598393c84aac8d23d5f7a/shared/config.lua#L8), default is qb-target.
 

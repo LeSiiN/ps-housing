@@ -135,10 +135,23 @@ function Property:StartRaid()
 end
 
 function Property:UpdateFurnitures(furnitures)
-    self.propertyData.furnitures = furnitures
+    local newfurnitures = {}
+
+    for i = 1, #furnitures do
+        newfurnitures[i] = {
+            id = furnitures[i].id,
+            label = furnitures[i].label,
+            object = furnitures[i].object,
+            position = furnitures[i].position,
+            rotation = furnitures[i].rotation,
+            type = furnitures[i].type
+        }
+    end
+
+    self.propertyData.furnitures = newfurnitures
 
     MySQL.update("UPDATE properties SET furnitures = @furnitures WHERE property_id = @property_id", {
-        ["@furnitures"] = json.encode(furnitures),
+        ["@furnitures"] = json.encode(newfurnitures),
         ["@property_id"] = self.property_id
     })
 
@@ -272,14 +285,18 @@ function Property:UpdateOwner(data)
 
     local totalAfterCommission = self.propertyData.price - commission
 
-    if prevPlayer ~= nil then
-        Framework[Config.Notify].Notify(prevPlayer.PlayerData.source, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id, "success")
-        prevPlayer.Functions.AddMoney('bank', totalAfterCommission, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id)
-    elseif previousOwner then
-        MySQL.Async.execute('UPDATE `players` SET `bank` = `bank` + @price WHERE `citizenid` = @citizenid', {
-            ['@citizenid'] = previousOwner,
-            ['@price'] = totalAfterCommission
-        })
+    if Config.QBManagement then
+        exports['qb-management']:AddMoney(Config.RealtorJobName, totalAfterCommission)
+    else
+        if prevPlayer ~= nil then
+            Framework[Config.Notify].Notify(prevPlayer.PlayerData.source, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id, "success")
+            prevPlayer.Functions.AddMoney('bank', totalAfterCommission, "Sold Property: " .. self.propertyData.street .. " " .. self.property_id)
+        elseif previousOwner then
+            MySQL.Async.execute('UPDATE `players` SET `bank` = `bank` + @price WHERE `citizenid` = @citizenid', {
+                ['@citizenid'] = previousOwner,
+                ['@price'] = totalAfterCommission
+            })
+        end
     end
     
     realtor.Functions.AddMoney('bank', commission, "Commission from Property: " .. self.propertyData.street .. " " .. self.property_id)
@@ -295,7 +312,8 @@ function Property:UpdateOwner(data)
     self.propertyData.furnitures = {} -- to be fetched on enter
 
     TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateOwner", self.property_id, citizenid)
-
+    TriggerClientEvent("ps-housing:client:updateProperty", -1, "UpdateForSale", self.property_id, 0)
+    
     Framework[Config.Logs].SendLog("**House Bought** by: **"..PlayerData.charinfo.firstname.." "..PlayerData.charinfo.lastname.."** for $"..self.propertyData.price.." from **"..realtor.PlayerData.charinfo.firstname.." "..realtor.PlayerData.charinfo.lastname.."** !")
 
     Framework[Config.Notify].Notify(targetSrc, "You have bought the property for $"..self.propertyData.price, "success")
